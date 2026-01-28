@@ -571,10 +571,11 @@ class CaesarApp:
                 return
 
             # keep Top N enabled/disabled in sync if user toggled Show all
-            if cipher not in SINGLE_RESULT_CIPHERS:
-                self.spin_topn.configure(
-                    state=("disabled" if self.var_show_all.get() else "normal")
-                )
+            # Note: spin_topn widget not yet implemented in UI
+            # if cipher not in SINGLE_RESULT_CIPHERS:
+            #     self.spin_topn.configure(
+            #         state=("disabled" if self.var_show_all.get() else "normal")
+            #     )
 
             results = brute_force(
                 text=text,
