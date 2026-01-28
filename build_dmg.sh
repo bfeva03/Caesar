@@ -12,7 +12,7 @@ echo ""
 # Configuration
 APP_NAME="Caesar Cipher"
 DMG_NAME="Caesar-Cipher-Installer"
-VERSION="1.0.0"
+VERSION="3.0.0"
 
 # Colors for output
 GREEN='\033[0;32m'

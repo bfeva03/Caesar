@@ -18,8 +18,8 @@ OPTIONS = {
         'CFBundleDisplayName': 'Caesar Cipher',
         'CFBundleGetInfoString': 'Decrypt and analyze classical ciphers',
         'CFBundleIdentifier': 'com.evanbushnell.caesarcipher',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
+        'CFBundleVersion': '3.0.0',
+        'CFBundleShortVersionString': '3.0.0',
         'NSHumanReadableCopyright': '© 2026 Evan Bushnell',
         'NSHighResolutionCapable': True,
         'LSMinimumSystemVersion': '10.13.0',  # macOS High Sierra or later
