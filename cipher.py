@@ -5,6 +5,7 @@ import string
 from typing import Dict, List, Optional
 
 from scoring import score_english
+from vigenere_detect import ioc_scan
 
 AZ_LOWER = string.ascii_lowercase
 AZ_UPPER = string.ascii_uppercase
@@ -380,3 +381,89 @@ def brute_force(
                 "note": "failed",
             }
         ]
+
+
+def detect_cipher(
+    text: str,
+    input_mode: str = "hex",
+    keep_case: bool = False,
+    keep_punct: bool = False,
+) -> Dict[str, object]:
+    """
+    Automatically detect which cipher was used on input text.
+    
+    Tests multiple cipher candidates and returns the best match based on scoring.
+    For polyalphabetic ciphers (Vigenere), also checks Index of Coincidence.
+    
+    Args:
+        text: The ciphertext to analyze
+        input_mode: "hex" for hexadecimal or "text" for text
+        keep_case: Whether to preserve case during analysis
+        keep_punct: Whether to preserve punctuation during analysis
+    
+    Returns:
+        Dictionary with keys:
+            - "cipher": Best detected cipher name (str)
+            - "score": Confidence score (float)
+            - "note": Additional information (str)
+    """
+    if not text.strip():
+        return {"cipher": None, "score": 0, "note": "empty text"}
+    
+    # List of candidates to test
+    candidates = [
+        "Caesar",
+        "Affine",
+        "Vigenere",
+        "Rail Fence",
+        "Columnar",
+        "Atbash",
+        "ROT47",
+        "ROT5",
+    ]
+    
+    results = {}
+    
+    # Test each candidate cipher
+    for cipher_name in candidates:
+        try:
+            rows = brute_force(
+                text=text,
+                cipher=cipher_name,
+                input_mode=input_mode,
+                keep_case=keep_case,
+                keep_punct=keep_punct,
+            )
+            
+            # Get best score for this cipher
+            if rows:
+                best_result = rows[0]
+                results[cipher_name] = best_result.get("score", -1e9)
+            else:
+                results[cipher_name] = -1e9
+        except Exception:
+            results[cipher_name] = -1e9
+    
+    # Find best cipher by score
+    if not results or all(v < -1000 for v in results.values()):
+        return {"cipher": None, "score": 0, "note": "all ciphers failed"}
+    
+    best_cipher = max(results, key=results.get)
+    best_score = results[best_cipher]
+    
+    # Check for polyalphabetic (Vigenere) using IoC
+    note = ""
+    if len(text) > 50:
+        ioc_results = ioc_scan(text.replace(" ", "").replace("\n", ""), max_len=15)
+        if ioc_results:
+            key_len, ioc_val = ioc_results[0]
+            if ioc_val > 0.06:  # English-like IoC suggests polyalphabetic
+                best_cipher = "Vigenere"
+                note = f"IoC={ioc_val:.3f}, key_len≈{key_len}"
+    
+    return {
+        "cipher": best_cipher,
+        "score": best_score,
+        "note": note,
+    }
+

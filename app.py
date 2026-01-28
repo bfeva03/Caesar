@@ -5,7 +5,7 @@ import subprocess
 import platform
 
 from theme import apply_theme, PALETTES
-from cipher import brute_force, caesar_shift
+from cipher import brute_force, caesar_shift, detect_cipher
 from widgets import ResultsTable, Toast, DiffView
 from analysis_panel import AnalysisPanel
 from vigenere_detect import summarize as vigenere_summarize
@@ -292,28 +292,31 @@ class CaesarApp:
         actions.grid(row=3, column=0, sticky="ew", pady=(12, 0))
         actions.columnconfigure(10, weight=1)
 
-        ttk.Button(actions, text="Break / Apply", command=self._refresh_results).grid(
+        ttk.Button(actions, text="Detect cipher", command=self._auto_detect_cipher).grid(
             row=0, column=0, sticky="w"
         )
-        ttk.Button(actions, text="Clear", command=self._clear).grid(
+        ttk.Button(actions, text="Break / Apply", command=self._refresh_results).grid(
             row=0, column=1, sticky="w", padx=(10, 0)
+        )
+        ttk.Button(actions, text="Clear", command=self._clear).grid(
+            row=0, column=2, sticky="w", padx=(10, 0)
         )
 
         ttk.Separator(actions, orient="vertical").grid(
-            row=0, column=2, sticky="ns", padx=14
+            row=0, column=3, sticky="ns", padx=14
         )
 
         ttk.Label(actions, text="Direct shift (Caesar):", style="Muted.TLabel").grid(
-            row=0, column=3, sticky="w"
+            row=0, column=4, sticky="w"
         )
         self.ent_shift = ttk.Entry(actions, width=6, textvariable=self.var_shift_direct)
-        self.ent_shift.grid(row=0, column=4, sticky="w", padx=(6, 10))
+        self.ent_shift.grid(row=0, column=5, sticky="w", padx=(6, 10))
         self.ent_shift.bind("<Return>", lambda _e: self._apply_direct_shift())
 
         self.btn_shift_apply = ttk.Button(
             actions, text="Apply", command=self._apply_direct_shift
         )
-        self.btn_shift_apply.grid(row=0, column=5, sticky="w")
+        self.btn_shift_apply.grid(row=0, column=6, sticky="w")
 
         preview_card = ttk.Frame(left, style="Card.TFrame", padding=14)
         preview_card.grid(row=2, column=0, sticky="ew", pady=(0, 10))
@@ -530,6 +533,33 @@ class CaesarApp:
 
         if not initial:
             self._refresh_results()
+
+    def _auto_detect_cipher(self):
+        """Detect the cipher type from input text."""
+        text = self._get_input_text()
+        if not text.strip():
+            self.toast.show("Nothing to detect (input is empty).")
+            return
+        
+        detection = detect_cipher(
+            text=text,
+            input_mode=self.var_input_mode.get(),
+            keep_case=bool(self.var_keep_case.get()),
+            keep_punct=bool(self.var_keep_punct.get()),
+        )
+        cipher = detection.get("cipher")
+        if not cipher:
+            self.toast.show("No cipher detected.")
+            return
+        
+        self.var_cipher.set(cipher)
+        self.config.set("last_cipher", cipher)
+        self._on_cipher_changed()
+        note = detection.get("note")
+        if note:
+            self.toast.show(f"Detected {cipher} • {note}")
+        else:
+            self.toast.show(f"Detected {cipher}.")
 
     def _on_input_modified(self, _event):
         if self.txt_input.edit_modified():
