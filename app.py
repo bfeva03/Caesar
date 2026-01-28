@@ -24,7 +24,7 @@ def get_system_theme():
                 ["defaults", "read", "-g", "AppleInterfaceStyle"],
                 capture_output=True,
                 text=True,
-                timeout=1
+                timeout=1,
             )
             # If the command succeeds, dark mode is enabled
             return "dark" if result.returncode == 0 else "light"

@@ -8,54 +8,54 @@ Usage:
 
 from setuptools import setup
 
-APP = ['main.py']
+APP = ["main.py"]
 DATA_FILES = []
 OPTIONS = {
-    'argv_emulation': False,  # Don't emulate command line arguments
-    'iconfile': 'icon.icns',
-    'plist': {
-        'CFBundleName': 'Caesar Cipher',
-        'CFBundleDisplayName': 'Caesar Cipher',
-        'CFBundleGetInfoString': 'Decrypt and analyze classical ciphers',
-        'CFBundleIdentifier': 'com.evanbushnell.caesarcipher',
-        'CFBundleVersion': '3.0.0',
-        'CFBundleShortVersionString': '3.0.0',
-        'NSHumanReadableCopyright': '© 2026 Evan Bushnell',
-        'NSHighResolutionCapable': True,
-        'LSMinimumSystemVersion': '10.13.0',  # macOS High Sierra or later
+    "argv_emulation": False,  # Don't emulate command line arguments
+    "iconfile": "icon.icns",
+    "plist": {
+        "CFBundleName": "Caesar Cipher",
+        "CFBundleDisplayName": "Caesar Cipher",
+        "CFBundleGetInfoString": "Decrypt and analyze classical ciphers",
+        "CFBundleIdentifier": "com.evanbushnell.caesarcipher",
+        "CFBundleVersion": "3.0.0",
+        "CFBundleShortVersionString": "3.0.0",
+        "NSHumanReadableCopyright": "© 2026 Evan Bushnell",
+        "NSHighResolutionCapable": True,
+        "LSMinimumSystemVersion": "10.13.0",  # macOS High Sierra or later
     },
-    'packages': [
-        'tkinter',
+    "packages": [
+        "tkinter",
     ],
-    'includes': [
-        'app',
-        'cipher',
-        'theme',
-        'widgets',
-        'analysis_panel',
-        'vigenere_detect',
-        'substitution_helper',
-        'config',
-        'utils',
-        'samples',
-        'scoring',
+    "includes": [
+        "app",
+        "cipher",
+        "theme",
+        "widgets",
+        "analysis_panel",
+        "vigenere_detect",
+        "substitution_helper",
+        "config",
+        "utils",
+        "samples",
+        "scoring",
     ],
-    'excludes': [
-        'matplotlib',
-        'numpy',
-        'scipy',
-        'pandas',
-        'pytest',
-        'setuptools',
-        'pip',
-        'wheel',
+    "excludes": [
+        "matplotlib",
+        "numpy",
+        "scipy",
+        "pandas",
+        "pytest",
+        "setuptools",
+        "pip",
+        "wheel",
     ],
 }
 
 setup(
-    name='Caesar Cipher',
+    name="Caesar Cipher",
     app=APP,
     data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
+    options={"py2app": OPTIONS},
+    setup_requires=["py2app"],
 )
