@@ -393,7 +393,7 @@ def detect_cipher(
     Automatically detect which cipher was used on input text.
     
     Tests multiple cipher candidates and returns the best match based on scoring.
-    For polyalphabetic ciphers (Vigenere), also checks Index of Coincidence.
+    Uses heuristics to differentiate between similar scoring ciphers.
     
     Args:
         text: The ciphertext to analyze
@@ -410,19 +410,20 @@ def detect_cipher(
     if not text.strip():
         return {"cipher": None, "score": 0, "note": "empty text"}
     
-    # List of candidates to test
+    # List of candidates to test (order matters for tie-breaking)
     candidates = [
         "Caesar",
         "Affine",
-        "Vigenere",
         "Rail Fence",
         "Columnar",
         "Atbash",
+        "Vigenere",
         "ROT47",
         "ROT5",
     ]
     
     results = {}
+    detail_results = {}
     
     # Test each candidate cipher
     for cipher_name in candidates:
@@ -435,10 +436,11 @@ def detect_cipher(
                 keep_punct=keep_punct,
             )
             
-            # Get best score for this cipher
+            # Get best score and details for this cipher
             if rows:
                 best_result = rows[0]
                 results[cipher_name] = best_result.get("score", -1e9)
+                detail_results[cipher_name] = best_result
             else:
                 results[cipher_name] = -1e9
         except Exception:
@@ -448,22 +450,45 @@ def detect_cipher(
     if not results or all(v < -1000 for v in results.values()):
         return {"cipher": None, "score": 0, "note": "all ciphers failed"}
     
-    best_cipher = max(results, key=results.get)
-    best_score = results[best_cipher]
+    best_score = max(results.values())
     
-    # Check for polyalphabetic (Vigenere) using IoC
-    note = ""
-    if len(text) > 50:
+    # Get all ciphers within 0.5 points of best score
+    close_ciphers = [(c, s) for c, s in results.items() if s >= best_score - 0.5]
+    close_ciphers.sort(key=lambda x: x[1], reverse=True)
+    
+    # Heuristic: Rail Fence and Columnar produce high scores easily
+    # If Rail Fence score is very high (>1.0) and Vigenere is close, prefer Rail Fence
+    if len(text) > 40:
+        rail_score = results.get("Rail Fence", -1e9)
+        vigenere_score = results.get("Vigenere", -1e9)
+        columnar_score = results.get("Columnar", -1e9)
+        
+        # Check IoC to distinguish Vigenere from transpositions
         ioc_results = ioc_scan(text.replace(" ", "").replace("\n", ""), max_len=15)
         if ioc_results:
             key_len, ioc_val = ioc_results[0]
-            if ioc_val > 0.06:  # English-like IoC suggests polyalphabetic
-                best_cipher = "Vigenere"
-                note = f"IoC={ioc_val:.3f}, key_len≈{key_len}"
+            # High IoC (>0.063) indicates polyalphabetic like Vigenere
+            if ioc_val > 0.065 and vigenere_score >= (rail_score - 0.3):
+                return {
+                    "cipher": "Vigenere",
+                    "score": vigenere_score,
+                    "note": f"IoC={ioc_val:.3f}, key_len≈{key_len}",
+                }
+            # Lower IoC suggests transposition (Rail Fence, Columnar)
+            elif ioc_val < 0.062 and rail_score > 0.5:
+                return {
+                    "cipher": "Rail Fence",
+                    "score": rail_score,
+                    "note": f"IoC={ioc_val:.3f} (transposition)",
+                }
+    
+    # Default: pick cipher with highest score
+    best_cipher = max(results, key=results.get)
     
     return {
         "cipher": best_cipher,
         "score": best_score,
-        "note": note,
+        "note": "",
     }
+
 
